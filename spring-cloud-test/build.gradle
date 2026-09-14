@@ -1,0 +1,60 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.5' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
+}
+
+ext {
+    set('springCloudVersion', '2023.0.1')
+}
+
+allprojects {
+    group = 'com.example'
+    version = '0.0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
+    dependencies {
+        // Spring Cloud Gateway 는 WebFlux(Netty) 기반이라 Spring MVC(starter-web)와 함께 쓸 수 없음
+        if (project.name != 'api-gateway') {
+            implementation 'org.springframework.boot:spring-boot-starter-web'
+        }
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    // 실행 가능한 bootJar 만 생성 (xxx-plain.jar 생성 안 함)
+    tasks.named('jar') {
+        enabled = false
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+}

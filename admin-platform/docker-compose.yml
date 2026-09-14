@@ -1,0 +1,34 @@
+name: admin-platform
+
+services:
+  app-server:
+    build: ./app-server
+    container_name: app-server
+    environment:
+      WS_PORT: 50066
+      REST_PORT: 50067
+    ports:
+      - "50066:50066" # WebSocket
+      - "50067:50067" # REST API
+    restart: unless-stopped
+
+  backoffice-backend:
+    build: ./backoffice-backend
+    container_name: backoffice-backend
+    environment:
+      APP_SERVER_URL: http://app-server:50067
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - app-server
+    restart: unless-stopped
+
+  backoffice-frontend:
+    build: ./backoffice-frontend
+    container_name: backoffice-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backoffice-backend
+    restart: unless-stopped

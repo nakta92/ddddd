@@ -1,0 +1,19 @@
+{
+  "name": "app-server",
+  "version": "0.1.0",
+  "description": "Realtime (WebSocket 50066) and REST (50067) main server",
+  "main": "src/index.js",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "ws": "^8.17.1"
+  }
+}
