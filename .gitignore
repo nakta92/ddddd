@@ -1,0 +1,36 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+npm-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Java / Gradle
+.gradle/
+build/
+out/
+bin/
+*.class
+!gradle/wrapper/gradle-wrapper.jar
+
+# Logs / runtime
+logs/
+*.log
+.pids/
