@@ -1,6 +1,0 @@
-rootProject.name = 'spring-cloud-test'
-
-include 'eureka-server'
-include 'api-gateway'
-include 'auth-service'
-include 'board-service'

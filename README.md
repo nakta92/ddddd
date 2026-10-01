@@ -1,24 +1,15 @@
 # ddddd
 
-세 개의 예제 프로젝트를 담은 저장소입니다.
+FastAPI + SQLite로 만든 카카오 로그인(OAuth 2.0) 기반 방명록 + 소셜 웹 서비스 저장소입니다.
 
 | 폴더 | 내용 | 실행 방식 |
 |---|---|---|
-| [`admin-platform/`](admin-platform/) | app-server(Node.js) + backoffice-backend(FastAPI) + backoffice-frontend(React) | `docker compose up --build` |
-| [`spring-cloud-test/`](spring-cloud-test/) | Spring Boot 3.2 + Spring Cloud 2023.0 멀티 모듈 (Eureka / Gateway / Auth / Board) | `./run.sh` |
-| [`kakao-guestbook/`](kakao-guestbook/) | FastAPI + SQLite 카카오 로그인 방명록 + 소셜 서비스(알림·친구·실시간 채팅) | `docker compose up --build` |
+| [`kakao-guestbook/`](kakao-guestbook/) | 방명록(글·댓글·반응), 내 정보/관리자, 인앱 알림, 친구(사이 맺기), 실시간 그룹 채팅(SSE) | `docker compose up --build` |
 
-자세한 내용은 각 폴더의 README를 참고하세요.
+설치·실행, 카카오 앱 설정, EC2 배포, 환경변수, 버전별 기능 표는 [`kakao-guestbook/README.md`](kakao-guestbook/README.md)를 참고하세요.
 
-## 포트 요약
+## 포트
 
 | 서비스 | 포트 |
 |---|---|
-| admin-platform / app-server | 50066 (WebSocket), 50067 (REST) |
-| admin-platform / backoffice-backend | 8000 |
-| admin-platform / backoffice-frontend | 3000 |
-| spring-cloud-test / eureka-server | 8761 |
-| spring-cloud-test / api-gateway | 8080 |
-| spring-cloud-test / auth-service | 8081 |
-| spring-cloud-test / board-service | 8082 |
-| kakao-guestbook | 8000 (admin-platform 백엔드와 같은 포트이므로 동시 실행 시 한쪽 포트 변경) |
+| kakao-guestbook | 8000 |
