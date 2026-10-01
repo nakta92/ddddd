@@ -23,7 +23,7 @@
     <form method="post" action="/chat/{{ room.id }}/messages" enctype="multipart/form-data" class="composer" id="composer">
       <div class="mention-box" id="mention-box" hidden></div>
       <textarea name="content" id="chat-input" rows="1" maxlength="2000"
-                placeholder="메시지 입력 (Enter 전송, Shift+Enter 줄바꿈, @로 멘션)"></textarea>
+                placeholder="메시지 입력 (@로 멘션)" title="Enter 전송 · Shift+Enter 줄바꿈 · @로 멘션"></textarea>
       <label class="btn sm file-btn" title="파일 첨부 (최대 {{ max_upload_mb }}MB)">📎<input type="file" name="file" id="chat-file" hidden></label>
       <button class="btn primary sm">전송</button>
       <div class="file-chip muted small" id="file-chip" hidden></div>

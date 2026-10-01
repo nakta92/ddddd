@@ -225,12 +225,32 @@
     if (e.target.matches('.label-picker select')) syncLabelPicker(e.target);
   });
 
-  // 안 읽은 알림 배지 주기적 갱신(탭이 보일 때만)
+  // 모바일 드로어: 메뉴 링크 클릭/ESC/뒤로 가기 시 닫기, 햄버거 키보드 조작
+  const navToggle = $('#nav-toggle');
+  const hamburger = $('.hamburger');
+  if (navToggle && hamburger) {
+    const setOpen = (open) => {
+      navToggle.checked = open;
+      hamburger.setAttribute('aria-expanded', String(open));
+      hamburger.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
+    };
+    navToggle.addEventListener('change', () => setOpen(navToggle.checked));
+    hamburger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!navToggle.checked); }
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && navToggle.checked) setOpen(false); });
+    $$('#sidebar a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+    window.addEventListener('pageshow', () => setOpen(false));
+    setOpen(false);
+  }
+
+  // 안 읽은 알림 배지 주기적 갱신(탭이 보일 때만). 상단바·사이드바 배지를 함께 갱신
   const badge = $('#notif-badge');
   function setBadge(count) {
-    if (!badge) return;
-    badge.textContent = count > 99 ? '99+' : String(count);
-    badge.hidden = count <= 0;
+    $$('[data-badge="notifications"]').forEach((el) => {
+      el.textContent = count > 99 ? '99+' : String(count);
+      el.hidden = count <= 0;
+    });
   }
   async function refreshBadge() {
     if (!badge || document.hidden) return;

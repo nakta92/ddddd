@@ -107,7 +107,7 @@ def test_messages_read_counts_and_unread_badges(make_client):
     # 비·씨는 아직 안 읽음 → 채팅 목록 배지 1, 상단 메뉴 배지
     list_b = b.get("/chat").text
     assert re.search(rf'id="room-{room}".*?class="badge inline unread"\s*>1<', list_b, re.S)
-    assert 'id="chat-badge">1<' in b.get("/").text
+    assert re.search(r'data-badge="chat"\s*>1<', b.get("/").text)  # 사이드바 채팅 배지
 
     # 비가 방에 들어오면 읽음 처리 → 에이 화면에서 "1명 읽음"
     b.get(f"/chat/{room}")

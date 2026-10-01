@@ -1,5 +1,7 @@
 """v3.0 스모크 테스트: 댓글/대댓글/반응 알림, 목록·배지, 클릭 시 대상 이동+강조, 모두 읽음."""
 
+import re
+
 from sqlalchemy import select
 
 from app.database import SessionLocal
@@ -80,7 +82,8 @@ def test_list_badge_go_and_read_all(make_client):
     new_comment(b, pid, "둘째 댓글")
 
     page = a.get("/").text
-    assert 'id="notif-badge"' in page and ">2</span>" in page
+    assert re.search(r'id="notif-badge" data-badge="notifications"\s*>2<', page)  # 상단바
+    assert re.search(r'class="badge inline" data-badge="notifications"\s*>2<', page)  # 사이드바
     assert a.get("/notifications/unread-count").json() == {"count": 2}
 
     listing = a.get("/notifications").text
@@ -98,7 +101,7 @@ def test_list_badge_go_and_read_all(make_client):
 
     a.post("/notifications/read-all", headers=AJAX)
     assert a.get("/notifications/unread-count").json() == {"count": 0}
-    assert 'id="notif-badge" hidden' in a.get("/").text
+    assert re.search(r'id="notif-badge" data-badge="notifications" hidden', a.get("/").text)
 
 
 def test_go_to_deleted_target(make_client):

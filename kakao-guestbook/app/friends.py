@@ -1,6 +1,6 @@
 """친구(사이 맺기) 관계 조회 헬퍼."""
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from .models import Friendship
@@ -56,6 +56,12 @@ def relation_map(db: Session, me_id: int | None) -> dict[int, dict]:
             status = "sent" if f.requester_id == me_id else "received"
         result[other_id] = {"status": status, "label": f.label_for(me_id), "fid": f.id}
     return result
+
+
+def pending_friend_requests(db: Session, me_id: int) -> int:
+    return db.scalar(
+        select(func.count(Friendship.id)).where(Friendship.addressee_id == me_id, Friendship.status == "pending")
+    ) or 0
 
 
 def clean_label(choice: str, custom: str = "") -> str | None:
