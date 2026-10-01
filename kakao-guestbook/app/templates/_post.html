@@ -1,0 +1,48 @@
+{% from "_macros.html" import avatar, reaction_bar, comment_item with context %}
+{% set p = node.p %}
+<article class="post card" id="post-{{ p.id }}">
+  <header class="post-head">
+    {{ avatar(p.author) }}
+    <div class="meta">
+      <span class="author">{{ p.author.name }}</span>
+      <time datetime="{{ p.created_at.isoformat() }}Z">{{ p.created_at|kst }}</time>
+      {% if p.updated_at %}<span class="edited">(수정됨)</span>{% endif %}
+    </div>
+  </header>
+
+  <div class="content">{{ p.content }}</div>
+
+  <div class="foot">
+    {{ reaction_bar(node.reactions, "/posts/%d/react" % p.id) }}
+    <span class="spacer"></span>
+    {% if user and user.id == p.user_id %}
+      <details class="inline-form" data-key="edit-post-{{ p.id }}">
+        <summary class="link">수정</summary>
+        <form method="post" action="/posts/{{ p.id }}/edit" data-ajax class="stack-form">
+          <textarea name="content" rows="3" maxlength="2000" required>{{ p.content }}</textarea>
+          <button class="btn primary sm">저장</button>
+        </form>
+      </details>
+      <form method="post" action="/posts/{{ p.id }}/delete" data-ajax data-confirm="이 글을 삭제할까요? 댓글도 함께 삭제됩니다." class="inline">
+        <button class="link danger">삭제</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <details class="comments" data-key="comments-{{ p.id }}" open>
+    <summary class="link">💬 댓글 {{ node.comment_count }}개</summary>
+    {% if node.comments %}
+      <ul class="comment-list">
+        {% for cn in node.comments %}{{ comment_item(cn, p) }}{% endfor %}
+      </ul>
+    {% endif %}
+    {% if user %}
+      <form method="post" action="/posts/{{ p.id }}/comments" data-ajax data-reset class="comment-form">
+        <textarea name="content" rows="1" maxlength="1000" required placeholder="댓글을 입력하세요" data-key="comment-{{ p.id }}"></textarea>
+        <button class="btn primary sm">등록</button>
+      </form>
+    {% else %}
+      <p class="muted small"><a href="/login?next=/posts/{{ p.id }}">로그인</a>하면 댓글을 남길 수 있어요.</p>
+    {% endif %}
+  </details>
+</article>

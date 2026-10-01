@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block title %}로그인 · {{ settings.app_name }}{% endblock %}
+{% block content %}
+<section class="card narrow center">
+  <h1>로그인</h1>
+  <p class="muted">카카오 계정으로 간편하게 로그인하고 방명록을 남겨보세요.</p>
+  {% if settings.kakao_enabled %}
+    <a class="btn kakao block" href="/auth/kakao/login?next={{ next|urlencode }}">카카오 로그인</a>
+  {% else %}
+    <div class="flash error">카카오 REST API 키가 설정되지 않았습니다. <code>.env</code>의 <code>KAKAO_REST_API_KEY</code>를 설정하세요.</div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,17 @@
+# 민감정보 / 런타임 데이터는 커밋하지 않습니다.
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+uploads/
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/

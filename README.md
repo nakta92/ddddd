@@ -1,11 +1,12 @@
 # ddddd
 
-두 개의 예제 프로젝트를 담은 저장소입니다.
+세 개의 예제 프로젝트를 담은 저장소입니다.
 
 | 폴더 | 내용 | 실행 방식 |
 |---|---|---|
 | [`admin-platform/`](admin-platform/) | app-server(Node.js) + backoffice-backend(FastAPI) + backoffice-frontend(React) | `docker compose up --build` |
 | [`spring-cloud-test/`](spring-cloud-test/) | Spring Boot 3.2 + Spring Cloud 2023.0 멀티 모듈 (Eureka / Gateway / Auth / Board) | `./run.sh` |
+| [`kakao-guestbook/`](kakao-guestbook/) | FastAPI + SQLite 카카오 로그인 방명록 + 소셜 서비스 | `uvicorn app.main:app` |
 
 자세한 내용은 각 폴더의 README를 참고하세요.
 
@@ -20,3 +21,4 @@
 | spring-cloud-test / api-gateway | 8080 |
 | spring-cloud-test / auth-service | 8081 |
 | spring-cloud-test / board-service | 8082 |
+| kakao-guestbook | 8000 (admin-platform 백엔드와 같은 포트이므로 동시 실행 시 한쪽 포트 변경) |

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ settings.app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}">
+</head>
+<body>
+  {% from "_macros.html" import avatar with context %}
+  <header class="topbar">
+    <a class="logo" href="/">📖 {{ settings.app_name }}</a>
+    <nav class="topnav">
+      {% if user %}
+        <span class="me">{{ avatar(user, "sm") }} {{ user.name }}</span>
+        <form method="post" action="/auth/logout" class="inline">
+          <button class="btn ghost sm">로그아웃</button>
+        </form>
+      {% else %}
+        <a class="btn kakao sm" href="/login">카카오 로그인</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="container">
+    {% for f in flashes %}
+      <div class="flash {{ f.category }}" role="alert">{{ f.message }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js?v={{ ASSET_VERSION }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
