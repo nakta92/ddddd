@@ -6,7 +6,7 @@
 |---|---|---|
 | [`admin-platform/`](admin-platform/) | app-server(Node.js) + backoffice-backend(FastAPI) + backoffice-frontend(React) | `docker compose up --build` |
 | [`spring-cloud-test/`](spring-cloud-test/) | Spring Boot 3.2 + Spring Cloud 2023.0 멀티 모듈 (Eureka / Gateway / Auth / Board) | `./run.sh` |
-| [`kakao-guestbook/`](kakao-guestbook/) | FastAPI + SQLite 카카오 로그인 방명록 + 소셜 서비스 | `uvicorn app.main:app` |
+| [`kakao-guestbook/`](kakao-guestbook/) | FastAPI + SQLite 카카오 로그인 방명록 + 소셜 서비스(알림·친구·실시간 채팅) | `docker compose up --build` |
 
 자세한 내용은 각 폴더의 README를 참고하세요.
 

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
+from sqlalchemy import text
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -13,12 +14,18 @@ from .migrations import init_db
 from .routers import admin, auth, chat, friends, guestbook, notifications, profile
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger("app")
+DEFAULT_SECRET = "change-me-in-production"
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # 새 테이블 생성 + 기존 DB에 누락된 컬럼 자동 추가
     init_db(engine)
+    if settings.secret_key in (DEFAULT_SECRET, "change-me-to-a-long-random-string"):
+        logger.warning("SECRET_KEY가 기본값입니다. 운영 환경에서는 반드시 .env에서 긴 임의 문자열로 바꾸세요.")
+    if not settings.kakao_enabled:
+        logger.warning("KAKAO_REST_API_KEY가 비어 있어 카카오 로그인을 사용할 수 없습니다.")
     yield
 
 
@@ -59,6 +66,17 @@ app.include_router(admin.router)
 app.include_router(notifications.router)
 app.include_router(friends.router)
 app.include_router(chat.router)
+
+
+@app.get("/health", include_in_schema=False)
+def health():
+    """컨테이너 헬스체크: DB 연결까지 확인합니다."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as e:  # pragma: no cover - DB 장애 시
+        return JSONResponse({"status": "error", "detail": str(e)}, 503)
+    return {"status": "ok"}
 
 
 @app.exception_handler(LoginRequired)
