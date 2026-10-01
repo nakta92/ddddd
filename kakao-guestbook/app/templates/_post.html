@@ -4,7 +4,7 @@
   <header class="post-head">
     {{ avatar(p.author) }}
     <div class="meta">
-      <span class="author">{{ p.author.name }}</span>
+      <a class="author" href="/users/{{ p.author.id }}">{{ p.author.name }}</a>
       <time datetime="{{ p.created_at.isoformat() }}Z">{{ p.created_at|kst }}</time>
       {% if p.updated_at %}<span class="edited">(수정됨)</span>{% endif %}
     </div>

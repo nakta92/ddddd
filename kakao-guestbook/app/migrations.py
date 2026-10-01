@@ -66,6 +66,13 @@ def add_missing_columns(engine: Engine, metadata: MetaData) -> list[str]:
                 if isinstance(col.type, DateTime) and col.default is not None and col.default.is_callable:
                     conn.execute(table.update().where(col.is_(None)).values({col.name: utcnow()}))
                 added.append(f"{table.name}.{col.name}")
+            # 새로 추가된 컬럼의 인덱스(UNIQUE 포함)는 ALTER로 못 만드니 인덱스로 생성
+            for index in table.indexes:
+                try:
+                    with conn.begin_nested():
+                        index.create(conn, checkfirst=True)
+                except Exception as e:  # 기존 데이터가 UNIQUE를 위반하는 경우 등
+                    logger.warning("마이그레이션: 인덱스 %s 생성 실패: %s", index.name, e)
 
     for name in added:
         logger.info("마이그레이션: 컬럼 추가 %s", name)

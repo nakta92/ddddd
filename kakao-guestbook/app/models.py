@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -33,14 +34,24 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     kakao_id: Mapped[int | None] = mapped_column(BigInteger, unique=True, index=True)
+    # 카카오 없이 로그인하는 기본 관리자 계정 식별용(.env의 ADMIN_USERNAME)
+    username: Mapped[str | None] = mapped_column(String(50), unique=True, index=True)
     nickname: Mapped[str] = mapped_column(String(100), default="")
     profile_image: Mapped[str | None] = mapped_column(String(500))
+    display_name: Mapped[str | None] = mapped_column(String(30))
+    bio: Mapped[str | None] = mapped_column(String(300))
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime)
 
     @property
     def name(self) -> str:
-        return self.nickname or "이름 없음"
+        """화면 표시용 이름: 내 정보에서 정한 표시 이름 > 카카오 닉네임."""
+        return self.display_name or self.nickname or "이름 없음"
+
+    @property
+    def login_type(self) -> str:
+        return "카카오" if self.kakao_id else "관리자 계정"
 
 
 class Post(Base):

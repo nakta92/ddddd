@@ -14,6 +14,13 @@ Python **FastAPI + SQLite**로 만든 카카오 로그인(OAuth 2.0) 기반 방�
 - 모든 시간은 UTC로 저장하고 KST로 표시
 - 앱 시작 시 **누락 컬럼 자동 추가 마이그레이션**(기존 DB 호환)
 
+### 내 정보 / 관리자 (v2.0)
+- 내 정보 등록·변경(`/me`): 표시 이름, 자기소개. 표시 이름이 있으면 카카오 닉네임 대신 우선 노출
+- 사용자 프로필 페이지(`/users/{id}`): 작성자 이름을 누르면 이동
+- 관리자 페이지(`/admin`): 회원 목록·검색, 회원 삭제, 관리자 권한 부여/해제(본인 해제·삭제 차단)
+- 최초 관리자는 `.env`의 `ADMIN_KAKAO_IDS`(카카오 회원번호)로 지정
+- 카카오 없이 로그인하는 기본 관리자 계정(`ADMIN_USERNAME`/`ADMIN_PASSWORD`, `/auth/admin/login`), 5회 실패 시 5분 잠금
+
 ## 기술 스택
 
 | 구분 | 사용 기술 |
@@ -59,6 +66,9 @@ uvicorn app.main:app --reload --port 8000
 | `KAKAO_REST_API_KEY` | - | 카카오 REST API 키 |
 | `KAKAO_CLIENT_SECRET` | - | (선택) 카카오 Client Secret |
 | `KAKAO_REDIRECT_URI` | `http://localhost:8000/auth/kakao/callback` | 카카오에 등록한 Redirect URI |
+| `ADMIN_KAKAO_IDS` | - | 최초 관리자 카카오 회원번호(쉼표 구분) |
+| `ADMIN_USERNAME` | - | 기본 관리자 계정 아이디 (비우면 비활성) |
+| `ADMIN_PASSWORD` | - | 기본 관리자 계정 비밀번호 (비우면 비활성, 길고 복잡하게) |
 
 ## 테스트
 
@@ -83,7 +93,7 @@ kakao-guestbook/
 │   ├── deps.py          # 현재 사용자, 템플릿, 플래시, AJAX 판별
 │   ├── views.py         # 방명록 뷰 모델(댓글 트리·반응 요약)
 │   ├── timeutil.py      # UTC → KST
-│   ├── routers/         # auth, guestbook
+│   ├── routers/         # auth, guestbook, profile, admin
 │   ├── templates/       # Jinja2 템플릿 (layout.html 상속)
 │   └── static/          # style.css, app.js
 ├── tests/               # pytest 스모크 테스트
@@ -96,3 +106,4 @@ kakao-guestbook/
 | 버전 | 태그 | 내용 |
 |---|---|---|
 | v1.0 | `v1.0` | 카카오 로그인, 방명록(글/댓글/대댓글), 반응, AJAX(스크롤 유지), 페이지네이션, KST 표시, 자동 마이그레이션 |
+| v2.0 | `v2.0` | 내 정보(표시 이름·자기소개), 프로필 페이지, 관리자 페이지(회원 삭제·권한 부여/해제), 최초 관리자 지정, 기본 관리자 계정 |

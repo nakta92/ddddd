@@ -19,7 +19,7 @@ templates.env.filters["kst"] = format_kst
 templates.env.globals["settings"] = settings
 templates.env.globals["REACTIONS"] = REACTIONS
 # 정적 파일 캐시 무효화용 버전(CSS/JS 변경 시 올립니다)
-templates.env.globals["ASSET_VERSION"] = "1.0"
+templates.env.globals["ASSET_VERSION"] = "2.0"
 
 
 class LoginRequired(Exception):
@@ -85,6 +85,12 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User | 
 def login_required(user: User | None = Depends(get_current_user)) -> User:
     if user is None:
         raise LoginRequired()
+    return user
+
+
+def admin_required(user: User = Depends(login_required)) -> User:
+    if not user.is_admin:
+        raise AppError("관리자만 접근할 수 있습니다.", 403, redirect_to="/")
     return user
 
 

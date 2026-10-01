@@ -30,7 +30,7 @@
     {{ avatar(c.author, "sm") }}
     <div class="comment-body">
       <div class="meta">
-        <span class="author">{{ c.author.name }}</span>
+        <a class="author" href="/users/{{ c.author.id }}">{{ c.author.name }}</a>
         <time datetime="{{ c.created_at.isoformat() }}Z">{{ c.created_at|kst }}</time>
         {% if c.updated_at %}<span class="edited">(수정됨)</span>{% endif %}
       </div>

@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}{{ target.name }} · {{ settings.app_name }}{% endblock %}
+{% block content %}
+{% from "_macros.html" import avatar with context %}
+<section class="card profile-card">
+  <div class="profile-head">
+    {{ avatar(target) }}
+    <div>
+      <h1>{{ target.name }}{% if target.is_admin %} <span class="chip admin">관리자</span>{% endif %}</h1>
+      <p class="muted small">가입일 {{ target.created_at|kst("%Y-%m-%d") }} · 글 {{ stats.posts }}개 · 댓글 {{ stats.comments }}개</p>
+    </div>
+  </div>
+  <p class="content">{{ target.bio or "아직 자기소개가 없어요." }}</p>
+  {% block profile_actions %}
+  {% if user and user.id == target.id %}<a class="btn sm" href="/me">내 정보 변경</a>{% endif %}
+  {% endblock %}
+</section>
+{% endblock %}

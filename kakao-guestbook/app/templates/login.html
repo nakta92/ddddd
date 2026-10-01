@@ -9,5 +9,8 @@
   {% else %}
     <div class="flash error">카카오 REST API 키가 설정되지 않았습니다. <code>.env</code>의 <code>KAKAO_REST_API_KEY</code>를 설정하세요.</div>
   {% endif %}
+  {% if settings.admin_login_enabled %}
+    <p class="small"><a href="/auth/admin/login">관리자 계정으로 로그인</a></p>
+  {% endif %}
 </section>
 {% endblock %}

@@ -19,6 +19,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app import kakao  # noqa: E402
 from app.database import Base, engine  # noqa: E402
 from app.main import app  # noqa: E402
+from app.routers import auth as auth_router  # noqa: E402
 
 AJAX = {"X-Requested-With": "fetch"}
 FAKE_PROFILES: dict[str, kakao.KakaoProfile] = {}
@@ -28,6 +29,7 @@ FAKE_PROFILES: dict[str, kakao.KakaoProfile] = {}
 def fresh_db(monkeypatch):
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+    auth_router.reset_admin_throttle()
     monkeypatch.setattr(kakao, "exchange_token", lambda code: f"token:{code}")
     monkeypatch.setattr(kakao, "fetch_user", lambda token: FAKE_PROFILES[token.split(":", 1)[1]])
     yield

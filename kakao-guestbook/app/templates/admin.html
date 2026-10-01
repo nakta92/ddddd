@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block title %}관리자 · {{ settings.app_name }}{% endblock %}
+{% block container_class %}wide{% endblock %}
+{% block content %}
+<div class="list-head">
+  <h2>회원 관리 <span class="muted small">총 {{ total }}명 · 관리자 {{ admin_count }}명</span></h2>
+</div>
+<form method="get" action="/admin" class="search-row">
+  <input type="search" name="q" value="{{ q }}" placeholder="이름 / 닉네임 / 아이디 검색">
+  <button class="btn">검색</button>
+</form>
+<div class="card table-wrap">
+  <table class="table">
+    <thead>
+      <tr><th>ID</th><th>회원</th><th>로그인</th><th>가입일</th><th>최근 로그인</th><th>글</th><th>권한</th><th>관리</th></tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+        {% include "_admin_row.html" %}
+      {% else %}
+        <tr><td colspan="8" class="empty">회원이 없습니다.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if pages > 1 %}
+<nav class="pagination" aria-label="페이지">
+  {% for n in range(1, pages + 1) %}
+    {% if n == page %}<span class="current">{{ n }}</span>
+    {% else %}<a href="/admin?page={{ n }}&q={{ q|urlencode }}">{{ n }}</a>{% endif %}
+  {% endfor %}
+</nav>
+{% endif %}
+{% endblock %}
