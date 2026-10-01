@@ -10,7 +10,7 @@ from .config import settings
 from .database import engine
 from .deps import BASE_DIR, AppError, LoginRequired, back_path, flash, login_url, wants_json
 from .migrations import init_db
-from .routers import admin, auth, guestbook, profile
+from .routers import admin, auth, guestbook, notifications, profile
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -37,6 +37,7 @@ app.include_router(auth.router)
 app.include_router(guestbook.router)
 app.include_router(profile.router)
 app.include_router(admin.router)
+app.include_router(notifications.router)
 
 
 @app.exception_handler(LoginRequired)

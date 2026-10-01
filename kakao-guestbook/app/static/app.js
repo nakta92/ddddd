@@ -210,5 +210,24 @@
     history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
   }
 
-  window.GB = { toast, highlight, replaceElement, applyResult };
+  // 안 읽은 알림 배지 주기적 갱신(탭이 보일 때만)
+  const badge = $('#notif-badge');
+  function setBadge(count) {
+    if (!badge) return;
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.hidden = count <= 0;
+  }
+  async function refreshBadge() {
+    if (!badge || document.hidden) return;
+    try {
+      const res = await fetch('/notifications/unread-count', { headers: { Accept: 'application/json' } });
+      if (res.ok) setBadge((await res.json()).count);
+    } catch (_) { /* 무시 */ }
+  }
+  if (badge) {
+    setInterval(refreshBadge, 30000);
+    document.addEventListener('visibilitychange', refreshBadge);
+  }
+
+  window.GB = { toast, highlight, replaceElement, applyResult, setBadge, refreshBadge };
 })();

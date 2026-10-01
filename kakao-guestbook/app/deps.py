@@ -19,7 +19,7 @@ templates.env.filters["kst"] = format_kst
 templates.env.globals["settings"] = settings
 templates.env.globals["REACTIONS"] = REACTIONS
 # 정적 파일 캐시 무효화용 버전(CSS/JS 변경 시 올립니다)
-templates.env.globals["ASSET_VERSION"] = "2.0"
+templates.env.globals["ASSET_VERSION"] = "3.0"
 
 
 class LoginRequired(Exception):
@@ -44,7 +44,8 @@ def wants_json(request: Request) -> bool:
 
 
 def flash(request: Request, message: str, category: str = "info") -> None:
-    request.session.setdefault("_flashes", []).append({"message": message, "category": category})
+    # 세션은 키 재대입으로만 변경이 감지되므로 리스트를 새로 만들어 대입합니다.
+    request.session["_flashes"] = [*request.session.get("_flashes", []), {"message": message, "category": category}]
 
 
 def pop_flashes(request: Request) -> list[dict]:
@@ -95,7 +96,13 @@ def admin_required(user: User = Depends(login_required)) -> User:
 
 
 def base_context(request: Request, user: User | None, db: Session) -> dict:
-    return {"user": user, "flashes": pop_flashes(request)}
+    from .notify import unread_count
+
+    return {
+        "user": user,
+        "flashes": pop_flashes(request),
+        "unread_notifications": unread_count(db, user.id) if user else 0,
+    }
 
 
 def render(request: Request, name: str, user: User | None, db: Session, status_code: int = 200, **ctx):

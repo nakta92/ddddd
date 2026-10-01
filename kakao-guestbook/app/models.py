@@ -120,3 +120,22 @@ class Reaction(Base):
             sqlite_where=text("comment_id IS NOT NULL"),
         ),
     )
+
+
+class Notification(Base):
+    """인앱 알림. 대상(target_type/target_id)은 클릭 시점에 위치를 계산해 이동합니다."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    type: Mapped[str] = mapped_column(String(30))
+    message: Mapped[str] = mapped_column(String(300))
+    # post | comment | friends | chat_room | chat_message
+    target_type: Mapped[str | None] = mapped_column(String(20))
+    target_id: Mapped[int | None] = mapped_column()
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    actor: Mapped[User | None] = relationship(foreign_keys=[actor_id], lazy="joined")

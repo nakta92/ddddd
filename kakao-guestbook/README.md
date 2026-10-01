@@ -21,6 +21,12 @@ Python **FastAPI + SQLite**로 만든 카카오 로그인(OAuth 2.0) 기반 방�
 - 최초 관리자는 `.env`의 `ADMIN_KAKAO_IDS`(카카오 회원번호)로 지정
 - 카카오 없이 로그인하는 기본 관리자 계정(`ADMIN_USERNAME`/`ADMIN_PASSWORD`, `/auth/admin/login`), 5회 실패 시 5분 잠금
 
+### 알림 (v3.0)
+- 내 글에 댓글, 내 댓글에 대댓글, 글/댓글 반응 시 인앱 알림 생성(본인 행동은 제외, 반응 알림은 중복 방지)
+- `/notifications` 목록 + 상단바 🔔 안 읽은 수 배지(30초마다 갱신)
+- 알림 클릭 시 읽음 처리 후 대상 글/댓글이 있는 페이지로 이동해 펼치고 강조. 삭제된 대상은 안내
+- 안 읽은 알림은 하늘색 배경, 읽은 알림은 옅은 회색. "모두 읽음" 지원
+
 ## 기술 스택
 
 | 구분 | 사용 기술 |
@@ -93,7 +99,8 @@ kakao-guestbook/
 │   ├── deps.py          # 현재 사용자, 템플릿, 플래시, AJAX 판별
 │   ├── views.py         # 방명록 뷰 모델(댓글 트리·반응 요약)
 │   ├── timeutil.py      # UTC → KST
-│   ├── routers/         # auth, guestbook, profile, admin
+│   ├── notify.py        # 알림 생성/조회 헬퍼
+│   ├── routers/         # auth, guestbook, profile, admin, notifications
 │   ├── templates/       # Jinja2 템플릿 (layout.html 상속)
 │   └── static/          # style.css, app.js
 ├── tests/               # pytest 스모크 테스트
@@ -107,3 +114,4 @@ kakao-guestbook/
 |---|---|---|
 | v1.0 | `v1.0` | 카카오 로그인, 방명록(글/댓글/대댓글), 반응, AJAX(스크롤 유지), 페이지네이션, KST 표시, 자동 마이그레이션 |
 | v2.0 | `v2.0` | 내 정보(표시 이름·자기소개), 프로필 페이지, 관리자 페이지(회원 삭제·권한 부여/해제), 최초 관리자 지정, 기본 관리자 계정 |
+| v3.0 | `v3.0` | 인앱 알림(댓글·대댓글·반응), 알림 목록·안 읽은 수 배지, 클릭 시 대상 이동+강조 |

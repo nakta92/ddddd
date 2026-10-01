@@ -9,6 +9,7 @@ from ..config import settings
 from ..database import get_db
 from ..deps import AppError, flash, get_current_user, login_required, render, wants_json
 from ..models import REACTIONS, Comment, Post, Reaction, User, utcnow
+from ..notify import notify, snippet
 from ..views import build_post_nodes, page_of_post, post_context, post_url, render_post_html
 
 router = APIRouter()
@@ -168,6 +169,16 @@ def create_comment(request: Request, post_id: int, content: str = Form(""), pare
             parent = db.get(Comment, parent.parent_id)
     comment = Comment(post_id=post.id, user_id=user.id, parent_id=parent.id if parent else None, content=content)
     db.add(comment)
+    db.flush()
+    # 알림: 대댓글이면 원 댓글 작성자에게, 그리고 글 작성자에게(중복·본인 제외)
+    notified = {user.id}
+    if parent is not None and parent.user_id not in notified:
+        notify(db, parent.user_id, user, "reply",
+               f"{user.name}님이 회원님의 댓글에 답글을 남겼습니다: “{snippet(content)}”", "comment", comment.id)
+        notified.add(parent.user_id)
+    if post.user_id not in notified:
+        notify(db, post.user_id, user, "comment",
+               f"{user.name}님이 회원님의 글에 댓글을 남겼습니다: “{snippet(content)}”", "comment", comment.id)
     db.commit()
     db.refresh(comment)
     return post_response(request, db, post, user, focus=f"comment-{comment.id}")
@@ -200,7 +211,12 @@ def delete_comment(request: Request, comment_id: int, db: Session = Depends(get_
 def react_post(request: Request, post_id: int, kind: str = Form(""), db: Session = Depends(get_db),
                user: User = Depends(login_required)):
     post = get_post_or_404(db, post_id)
-    toggle_reaction(db, user, kind, post_id=post.id)
+    if toggle_reaction(db, user, kind, post_id=post.id):
+        emoji, label = REACTIONS[kind]
+        notify(db, post.user_id, user, "reaction",
+               f"{user.name}님이 회원님의 글에 {emoji} {label} 반응을 남겼습니다: “{snippet(post.content)}”",
+               "post", post.id, dedupe=True)
+        db.commit()
     return post_response(request, db, post, user)
 
 
@@ -208,6 +224,11 @@ def react_post(request: Request, post_id: int, kind: str = Form(""), db: Session
 def react_comment(request: Request, comment_id: int, kind: str = Form(""), db: Session = Depends(get_db),
                   user: User = Depends(login_required)):
     comment = get_comment_or_404(db, comment_id)
-    toggle_reaction(db, user, kind, comment_id=comment.id)
+    if toggle_reaction(db, user, kind, comment_id=comment.id):
+        emoji, label = REACTIONS[kind]
+        notify(db, comment.user_id, user, "reaction",
+               f"{user.name}님이 회원님의 댓글에 {emoji} {label} 반응을 남겼습니다: “{snippet(comment.content)}”",
+               "comment", comment.id, dedupe=True)
+        db.commit()
     post = get_post_or_404(db, comment.post_id)
     return post_response(request, db, post, user)
