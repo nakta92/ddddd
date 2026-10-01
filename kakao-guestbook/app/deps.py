@@ -19,7 +19,7 @@ templates.env.filters["kst"] = format_kst
 templates.env.globals["settings"] = settings
 templates.env.globals["REACTIONS"] = REACTIONS
 # 정적 파일 캐시 무효화용 버전(CSS/JS 변경 시 올립니다)
-templates.env.globals["ASSET_VERSION"] = "3.0"
+templates.env.globals["ASSET_VERSION"] = "4.0"
 
 
 class LoginRequired(Exception):

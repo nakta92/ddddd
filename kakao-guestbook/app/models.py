@@ -139,3 +139,29 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     actor: Mapped[User | None] = relationship(foreign_keys=[actor_id], lazy="joined")
+
+
+class Friendship(Base):
+    """사이 맺기. 요청자→수신자 단방향 행 하나로 관계를 표현하고, 관계 라벨은 각자 따로 붙입니다."""
+
+    __tablename__ = "friendships"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    requester_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    addressee_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(10), default="pending")  # pending | accepted
+    requester_label: Mapped[str] = mapped_column(String(20), default="친구")
+    addressee_label: Mapped[str] = mapped_column(String(20), default="친구")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    requester: Mapped[User] = relationship(foreign_keys=[requester_id], lazy="joined")
+    addressee: Mapped[User] = relationship(foreign_keys=[addressee_id], lazy="joined")
+
+    __table_args__ = (Index("uq_friendship_pair", "requester_id", "addressee_id", unique=True),)
+
+    def other(self, me_id: int) -> User:
+        return self.addressee if self.requester_id == me_id else self.requester
+
+    def label_for(self, me_id: int) -> str:
+        return self.requester_label if self.requester_id == me_id else self.addressee_label

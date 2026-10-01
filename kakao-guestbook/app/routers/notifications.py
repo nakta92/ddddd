@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import AppError, flash, login_required, render, wants_json
-from ..models import Comment, Notification, Post, User
+from ..models import Comment, Friendship, Notification, Post, User
 from ..notify import NOTIFICATION_ICONS, mark_all_read, unread_count
 from ..views import post_url
 
@@ -25,6 +25,11 @@ def target_url(db: Session, n: Notification) -> str | None:
         comment = db.get(Comment, n.target_id)
         if comment:
             return post_url(db, comment.post_id, f"comment-{comment.id}")
+    elif n.target_type == "friends":
+        # 거절 등으로 관계 행이 없어도 친구 페이지로 이동
+        if n.target_id and db.get(Friendship, n.target_id):
+            return f"/friends?highlight=fr-{n.target_id}#fr-{n.target_id}"
+        return "/friends"
     return None
 
 

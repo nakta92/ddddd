@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..friends import relation_map
 from ..deps import AppError, flash, get_current_user, login_required, render, wants_json
 from ..models import Comment, Post, User
 
@@ -51,4 +52,5 @@ def user_profile(request: Request, user_id: int, db: Session = Depends(get_db),
     target = db.get(User, user_id)
     if target is None:
         raise AppError("사용자를 찾을 수 없습니다.", 404, redirect_to="/")
-    return render(request, "user.html", user, db, target=target, stats=user_stats(db, target.id))
+    return render(request, "user.html", user, db, target=target, stats=user_stats(db, target.id),
+                  relations=relation_map(db, user.id if user else None))

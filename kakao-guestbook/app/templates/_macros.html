@@ -8,6 +8,8 @@
   {%- endif -%}
 {%- endmacro %}
 
+{% macro relation_badge(target) %}{% include "_relation.html" %}{% endmacro %}
+
 {% macro reaction_bar(reactions, action) %}
   <div class="reactions">
     {% for r in reactions %}

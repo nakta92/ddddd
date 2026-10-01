@@ -105,8 +105,11 @@
 
     if (data.total !== undefined && $('#post-total')) $('#post-total').textContent = data.total;
 
-    // 범용 부분 교체: [{id, html}, ...]
+    // 범용 부분 교체: [{id, html}, ...] / 선택자에 맞는 모든 요소 교체: [{selector, html}, ...]
     (data.replace || []).forEach((r) => replaceElement(r.id, r.html, form));
+    (data.replace_all || []).forEach((r) => {
+      $$(r.selector).forEach((el) => el.replaceWith(htmlToElement(r.html)));
+    });
 
     if (form.hasAttribute('data-reset') && document.body.contains(form)) form.reset();
     // 스크롤 위치 유지: AJAX 결과는 스크롤 이동 없이 강조만 합니다.
@@ -209,6 +212,18 @@
     const qs = params.toString();
     history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
   }
+
+  // 관계 라벨: '직접 입력'을 고를 때만 입력칸 표시
+  function syncLabelPicker(select) {
+    const input = select.parentElement.querySelector('.custom-label');
+    if (!input) return;
+    input.hidden = select.value !== 'custom';
+    if (!input.hidden && document.activeElement === select) input.focus();
+  }
+  $$('.label-picker select').forEach(syncLabelPicker);
+  document.addEventListener('change', (e) => {
+    if (e.target.matches('.label-picker select')) syncLabelPicker(e.target);
+  });
 
   // 안 읽은 알림 배지 주기적 갱신(탭이 보일 때만)
   const badge = $('#notif-badge');

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from .config import settings
 from .deps import templates
+from .friends import relation_map
 from .models import REACTIONS, Comment, Post, Reaction, User
 
 
@@ -79,8 +80,8 @@ def build_post_nodes(db: Session, posts: list[Post], viewer: User | None) -> lis
 
 
 def post_context(db: Session, viewer: User | None) -> dict:
-    """_post.html 렌더링에 필요한 공통 컨텍스트(버전이 올라가며 친구 관계 등이 추가됩니다)."""
-    return {}
+    """_post.html 렌더링에 필요한 공통 컨텍스트: 작성자와 나의 관계(친구 칩/친구 추가 버튼)."""
+    return {"relations": relation_map(db, viewer.id if viewer else None)}
 
 
 def render_post_html(request: Request, db: Session, post: Post, viewer: User | None) -> str:
