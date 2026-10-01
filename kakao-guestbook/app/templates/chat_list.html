@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% block title %}채팅 · {{ settings.app_name }}{% endblock %}
+{% block content %}
+{% from "_macros.html" import avatar with context %}
+
+{% if invites %}
+<section class="card">
+  <h2>받은 초대 <span class="badge inline">{{ invites|length }}</span></h2>
+  <ul class="people">
+    {% for m in invites %}
+      <li class="person" id="invite-{{ m.room_id }}">
+        <strong>💬 {{ m.room.name }}</strong>
+        <span class="muted small">{% if m.invited_by %}{{ m.invited_by.name }}님의 초대{% endif %} · {{ m.created_at|kst }}</span>
+        <span class="spacer"></span>
+        <form method="post" action="/chat/{{ m.room_id }}/accept" class="inline"><button class="btn primary sm">수락</button></form>
+        <form method="post" action="/chat/{{ m.room_id }}/reject" data-ajax data-confirm="'{{ m.room.name }}' 초대를 거절할까요?" class="inline"><button class="btn sm">거절</button></form>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<div class="list-head">
+  <h2>내 채팅방 <span class="muted small">{{ rooms|length }}개</span></h2>
+</div>
+<ul class="room-list" id="room-list">
+  {% for r in rooms %}
+    <li id="room-{{ r.room.id }}">
+      <a class="room" href="/chat/{{ r.room.id }}">
+        <span class="room-icon">💬</span>
+        <span class="room-body">
+          <span class="room-title">{{ r.room.name }} <span class="muted small">{{ r.members }}명</span></span>
+          <span class="room-preview muted small">
+            {%- if r.last -%}
+              {%- if r.last.kind == "file" -%}📎 {{ r.last.file_name }}{%- else -%}{{ r.last.content }}{%- endif -%}
+            {%- else -%}아직 메시지가 없어요{%- endif -%}
+          </span>
+        </span>
+        <span class="room-side">
+          {% if r.last %}<time class="muted small">{{ r.last.created_at|kst("%m-%d %H:%M") }}</time>{% endif %}
+          <span class="badge inline unread" {% if not r.unread %}hidden{% endif %}>{{ r.unread }}</span>
+        </span>
+      </a>
+    </li>
+  {% else %}
+    <li class="empty">참여 중인 채팅방이 없어요. 아래에서 방을 만들어 친구를 초대해 보세요.</li>
+  {% endfor %}
+</ul>
+
+<section class="card" id="new-room">
+  <h2>새 채팅방 만들기</h2>
+  <form method="post" action="/chat/rooms" class="stack">
+    <label for="room-name">방 이름</label>
+    <input type="text" id="room-name" name="name" maxlength="{{ name_max }}" required placeholder="예: 주말 등산 모임">
+    <label>초대할 친구 <span class="muted small">(사이 맺은 친구만 초대할 수 있어요. 초대받은 친구가 수락하면 입장합니다)</span></label>
+    {% if friends %}
+      <div class="check-grid">
+        {% for f in friends %}
+          <label class="check"><input type="checkbox" name="invitees" value="{{ f.id }}"> {{ avatar(f, "sm") }} {{ f.name }}</label>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted small">아직 친구가 없어요. <a href="/friends">친구 페이지</a>에서 사이를 맺어 보세요. 혼자서 방을 먼저 만들 수도 있어요.</p>
+    {% endif %}
+    <div><button class="btn primary">방 만들기</button></div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  // 개인 채널(SSE): 방별 안 읽은 수 실시간 갱신, 새 초대가 오면 새로고침
+  (() => {
+    if (!window.EventSource) return;
+    const es = new EventSource('/chat/events');
+    es.addEventListener('unread', (e) => {
+      const d = JSON.parse(e.data);
+      const li = document.getElementById(`room-${d.room_id}`);
+      if (!li) { location.reload(); return; }
+      const badge = li.querySelector('.unread');
+      badge.textContent = d.count; badge.hidden = d.count <= 0;
+      if (d.preview) li.querySelector('.room-preview').textContent = d.preview;
+      li.parentElement.prepend(li);
+    });
+    es.addEventListener('invite', () => location.reload());
+  })();
+</script>
+{% endblock %}

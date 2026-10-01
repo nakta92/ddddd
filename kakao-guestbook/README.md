@@ -33,6 +33,17 @@ Python **FastAPI + SQLite**로 만든 카카오 로그인(OAuth 2.0) 기반 방�
 - 방명록 글 작성자가 친구가 아니면 이름 옆 **+친구 추가** 버튼(새로고침 없이 요청), 친구면 관계 칩 표시
 - 친구 요청/수락/거절 시 알림
 
+### 그룹 채팅 (v5.0)
+- 채팅방 개설, **사이 맺은 친구만 초대**, 초대는 수락해야 입장(수락/거절 + 알림, 초대한 사람에게 결과 알림)
+- 텍스트 / 파일(최대 10MB) 공유. 파일은 **방 멤버만 다운로드**, 안전한 이미지(png/jpeg/gif/webp)는 미리보기
+- **실시간(SSE)**: 새 메시지, 읽음, 멤버 변경이 즉시 반영. 연결이 끊겼다 다시 붙으면 놓친 메시지 자동 보충
+- 메시지별 **"N명 읽음"**(방 입장/보고 있을 때 읽음 처리), 채팅 목록 방별 안 읽은 메시지 배지(실시간), 상단 메뉴 배지
+- 멤버 이름 옆 관계 표시, **`@멘션` 자동완성**(↑↓ 선택, Enter/Tab 입력) + 멘션 알림(클릭 시 해당 메시지로 이동·강조)
+- Enter 전송 / Shift+Enter 줄바꿈(한글 조합 중 Enter는 무시)
+
+> 실시간 이벤트는 프로세스 메모리(pub/sub)로 전달하므로 **uvicorn 워커 1개**로 실행하세요.
+> 여러 워커/서버로 늘리려면 Redis pub/sub 같은 외부 브로커가 필요합니다.
+
 ## 기술 스택
 
 | 구분 | 사용 기술 |
@@ -41,6 +52,7 @@ Python **FastAPI + SQLite**로 만든 카카오 로그인(OAuth 2.0) 기반 방�
 | DB | SQLite, SQLAlchemy 2.0 |
 | 템플릿 | Jinja2 (서버 렌더링 + 바닐라 JS) |
 | 외부 연동 | 카카오 REST API OAuth 2.0, httpx |
+| 실시간 | SSE(Server-Sent Events) + in-memory pub/sub |
 | 기타 | python-multipart, pydantic-settings(`.env`) |
 
 ## 설치 및 실행
@@ -52,8 +64,10 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env               # 값 채우기 (아래 '카카오 앱 설정' 참고)
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000 --timeout-graceful-shutdown 3
 ```
+
+> `--timeout-graceful-shutdown`: 채팅 SSE 연결이 열려 있어도 재시작/종료가 막히지 않게 대기 시간을 제한합니다.
 
 브라우저에서 http://localhost:8000 접속.
 
@@ -81,10 +95,13 @@ uvicorn app.main:app --reload --port 8000
 | `ADMIN_KAKAO_IDS` | - | 최초 관리자 카카오 회원번호(쉼표 구분) |
 | `ADMIN_USERNAME` | - | 기본 관리자 계정 아이디 (비우면 비활성) |
 | `ADMIN_PASSWORD` | - | 기본 관리자 계정 비밀번호 (비우면 비활성, 길고 복잡하게) |
+| `UPLOAD_DIR` | `./uploads` | 채팅 첨부파일 저장 폴더 |
+| `MAX_UPLOAD_MB` | `10` | 첨부파일 최대 크기(MB) |
 
 ## 테스트
 
 카카오 API는 가짜 함수로 바꿔 실제 네트워크 없이 OAuth 콜백 흐름까지 검증합니다.
+SSE 실시간 테스트(`test_v5_sse_live.py`)는 가짜 카카오 로그인을 붙인 실제 uvicorn 서버(`tests/live_server.py`)를 띄워 검증합니다.
 
 ```bash
 pip install -r requirements-dev.txt
@@ -107,9 +124,11 @@ kakao-guestbook/
 │   ├── timeutil.py      # UTC → KST
 │   ├── notify.py        # 알림 생성/조회 헬퍼
 │   ├── friends.py       # 친구 관계 조회/라벨 헬퍼
-│   ├── routers/         # auth, guestbook, profile, admin, notifications, friends
+│   ├── chat.py          # 채팅 읽음/안 읽은 수/멘션/첨부파일/실시간 이벤트
+│   ├── pubsub.py        # SSE용 in-memory pub/sub
+│   ├── routers/         # auth, guestbook, profile, admin, notifications, friends, chat
 │   ├── templates/       # Jinja2 템플릿 (layout.html 상속)
-│   └── static/          # style.css, app.js
+│   └── static/          # style.css, app.js, chat.js
 ├── tests/               # pytest 스모크 테스트
 ├── requirements.txt
 └── .env.example
@@ -123,3 +142,4 @@ kakao-guestbook/
 | v2.0 | `v2.0` | 내 정보(표시 이름·자기소개), 프로필 페이지, 관리자 페이지(회원 삭제·권한 부여/해제), 최초 관리자 지정, 기본 관리자 계정 |
 | v3.0 | `v3.0` | 인앱 알림(댓글·대댓글·반응), 알림 목록·안 읽은 수 배지, 클릭 시 대상 이동+강조 |
 | v4.0 | `v4.0` | 친구(사이 맺기): 검색·요청·수락/거절/취소/끊기, 관계 라벨, 방명록 +친구 추가/관계 칩, 친구 알림 |
+| v5.0 | `v5.0` | 그룹 채팅: 친구 초대·수락, 텍스트/파일(10MB), 실시간 SSE, N명 읽음, 안 읽은 배지, @멘션 자동완성·알림 |

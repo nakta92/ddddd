@@ -19,7 +19,7 @@ templates.env.filters["kst"] = format_kst
 templates.env.globals["settings"] = settings
 templates.env.globals["REACTIONS"] = REACTIONS
 # 정적 파일 캐시 무효화용 버전(CSS/JS 변경 시 올립니다)
-templates.env.globals["ASSET_VERSION"] = "4.0"
+templates.env.globals["ASSET_VERSION"] = "5.0"
 
 
 class LoginRequired(Exception):
@@ -96,12 +96,14 @@ def admin_required(user: User = Depends(login_required)) -> User:
 
 
 def base_context(request: Request, user: User | None, db: Session) -> dict:
+    from .chat import chat_badge_count
     from .notify import unread_count
 
     return {
         "user": user,
         "flashes": pop_flashes(request),
         "unread_notifications": unread_count(db, user.id) if user else 0,
+        "chat_badge": chat_badge_count(db, user.id) if user else 0,
     }
 
 

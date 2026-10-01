@@ -10,7 +10,7 @@ from .config import settings
 from .database import engine
 from .deps import BASE_DIR, AppError, LoginRequired, back_path, flash, login_url, wants_json
 from .migrations import init_db
-from .routers import admin, auth, friends, guestbook, notifications, profile
+from .routers import admin, auth, chat, friends, guestbook, notifications, profile
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -22,7 +22,26 @@ async def lifespan(_app: FastAPI):
     yield
 
 
+class BodySizeLimitMiddleware:
+    """Content-Length가 한도를 넘는 요청은 본문을 받기 전에 413으로 거절합니다(대용량 업로드 방지)."""
+
+    def __init__(self, app, max_bytes: int):
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            length = dict(scope["headers"]).get(b"content-length")
+            if length and length.isdigit() and int(length) > self.max_bytes:
+                message = f"요청이 너무 큽니다. 파일은 최대 {settings.max_upload_mb}MB까지 올릴 수 있습니다."
+                await JSONResponse({"ok": False, "error": message}, 413)(scope, receive, send)
+                return
+        await self.app(scope, receive, send)
+
+
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+# 파일 한도 + 폼 필드 여유분 1MB
+app.add_middleware(BodySizeLimitMiddleware, max_bytes=(settings.max_upload_mb + 1) * 1024 * 1024)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.secret_key,
@@ -39,6 +58,7 @@ app.include_router(profile.router)
 app.include_router(admin.router)
 app.include_router(notifications.router)
 app.include_router(friends.router)
+app.include_router(chat.router)
 
 
 @app.exception_handler(LoginRequired)

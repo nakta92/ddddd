@@ -12,6 +12,8 @@ _TMP = tempfile.mkdtemp(prefix="guestbook-test-")
 os.environ["DATABASE_URL"] = f"sqlite:///{_TMP}/test.db"
 os.environ["SECRET_KEY"] = "test-secret"
 os.environ["KAKAO_REST_API_KEY"] = "test-rest-key"
+os.environ["UPLOAD_DIR"] = f"{_TMP}/uploads"
+os.environ["MAX_UPLOAD_MB"] = "1"  # 테스트에서는 1MB로 낮춰 크기 제한 검증
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

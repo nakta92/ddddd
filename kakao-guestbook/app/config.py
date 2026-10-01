@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     admin_username: str = ""
     admin_password: str = ""
 
+    # 채팅 첨부파일 저장 폴더와 최대 크기(MB)
+    upload_dir: str = "./uploads"
+    max_upload_mb: int = 10
+
     # HTTPS로 서비스할 때 true로 설정하면 세션 쿠키에 Secure 속성이 붙습니다.
     session_https_only: bool = False
     posts_per_page: int = 5

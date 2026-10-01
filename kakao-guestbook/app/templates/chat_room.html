@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% block title %}{{ room.name }} · 채팅{% endblock %}
+{% block container_class %}wide{% endblock %}
+{% block content %}
+<div class="chat-layout">
+  <section class="chat-main card">
+    <header class="chat-head">
+      <a href="/chat" class="link" aria-label="채팅 목록">←</a>
+      <h1>{{ room.name }}</h1>
+      <span class="muted small">{{ members|length }}명</span>
+      <span class="spacer"></span>
+      <span class="live muted small" id="live-status" title="실시간 연결 상태">●</span>
+      <form method="post" action="/chat/{{ room.id }}/leave" data-ajax data-confirm="이 채팅방에서 나갈까요?" class="inline">
+        <button class="link danger">나가기</button>
+      </form>
+    </header>
+
+    <ul class="messages" id="messages">
+      {% if has_older %}<li class="msg system"><span class="sys">이전 메시지는 생략되었습니다.</span></li>{% endif %}
+      {% for m in messages %}{% include "_chat_message.html" %}{% else %}<li class="empty" id="no-msg">첫 메시지를 보내보세요!</li>{% endfor %}
+    </ul>
+
+    <form method="post" action="/chat/{{ room.id }}/messages" enctype="multipart/form-data" class="composer" id="composer">
+      <div class="mention-box" id="mention-box" hidden></div>
+      <textarea name="content" id="chat-input" rows="1" maxlength="2000"
+                placeholder="메시지 입력 (Enter 전송, Shift+Enter 줄바꿈, @로 멘션)"></textarea>
+      <label class="btn sm file-btn" title="파일 첨부 (최대 {{ max_upload_mb }}MB)">📎<input type="file" name="file" id="chat-file" hidden></label>
+      <button class="btn primary sm">전송</button>
+      <div class="file-chip muted small" id="file-chip" hidden></div>
+    </form>
+  </section>
+
+  <aside class="chat-side card">
+    <h2>멤버</h2>
+    <div id="member-panel">{% include "_chat_members.html" %}</div>
+    <details class="invite-box" {% if not members|length > 1 and invitable %}open{% endif %}>
+      <summary class="link">+ 친구 초대</summary>
+      {% if invitable %}
+        <form method="post" action="/chat/{{ room.id }}/invite" data-ajax class="stack">
+          <div class="check-grid">
+            {% for f in invitable %}
+              <label class="check"><input type="checkbox" name="invitees" value="{{ f.id }}"> {{ f.name }}</label>
+            {% endfor %}
+          </div>
+          <button class="btn primary sm">초대 보내기</button>
+        </form>
+      {% else %}
+        <p class="muted small">초대할 수 있는 친구가 없어요. 사이 맺은 친구만 초대할 수 있습니다.</p>
+      {% endif %}
+    </details>
+  </aside>
+</div>
+<script type="application/json" id="chat-data">{{ chat_data|tojson }}</script>
+{% endblock %}
+{% block scripts %}<script src="/static/chat.js?v={{ ASSET_VERSION }}" defer></script>{% endblock %}

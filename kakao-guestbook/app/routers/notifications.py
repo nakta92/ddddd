@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import AppError, flash, login_required, render, wants_json
-from ..models import Comment, Friendship, Notification, Post, User
+from ..chat import get_membership
+from ..models import ChatMessage, Comment, Friendship, Notification, Post, User
 from ..notify import NOTIFICATION_ICONS, mark_all_read, unread_count
 from ..views import post_url
 
@@ -30,6 +31,17 @@ def target_url(db: Session, n: Notification) -> str | None:
         if n.target_id and db.get(Friendship, n.target_id):
             return f"/friends?highlight=fr-{n.target_id}#fr-{n.target_id}"
         return "/friends"
+    elif n.target_type == "chat_room":
+        member = get_membership(db, n.target_id, n.user_id)
+        if member and member.status == "invited":
+            return f"/chat?highlight=invite-{n.target_id}#invite-{n.target_id}"
+        if member and member.status == "joined":
+            return f"/chat/{n.target_id}"
+    elif n.target_type == "chat_message":
+        msg = db.get(ChatMessage, n.target_id)
+        member = get_membership(db, msg.room_id, n.user_id) if msg else None
+        if member and member.status == "joined":
+            return f"/chat/{msg.room_id}?highlight=msg-{msg.id}#msg-{msg.id}"
     return None
 
 

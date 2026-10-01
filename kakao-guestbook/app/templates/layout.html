@@ -15,6 +15,7 @@
         <a class="bell" href="/notifications" title="알림" aria-label="알림 {{ unread_notifications }}개">
           🔔<span class="badge" id="notif-badge" {% if not unread_notifications %}hidden{% endif %}>{{ unread_notifications if unread_notifications < 100 else "99+" }}</span>
         </a>
+        <a class="navlink" href="/chat">채팅{% if chat_badge %}<span class="badge inline" id="chat-badge">{{ chat_badge if chat_badge < 100 else "99+" }}</span>{% endif %}</a>
         <a class="navlink" href="/friends">친구</a>
         {% if user.is_admin %}<a class="navlink" href="/admin">관리자</a>{% endif %}
         <a class="me" href="/me" title="내 정보">{{ avatar(user, "sm") }} {{ user.name }}</a>

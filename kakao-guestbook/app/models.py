@@ -165,3 +165,54 @@ class Friendship(Base):
 
     def label_for(self, me_id: int) -> str:
         return self.requester_label if self.requester_id == me_id else self.addressee_label
+
+
+class ChatRoom(Base):
+    __tablename__ = "chat_rooms"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50))
+    owner_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    owner: Mapped[User | None] = relationship(lazy="joined")
+
+
+class ChatMember(Base):
+    """채팅방 멤버. 초대(invited) 후 수락해야 입장(joined)합니다."""
+
+    __tablename__ = "chat_members"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    room_id: Mapped[int] = mapped_column(ForeignKey("chat_rooms.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(10), default="invited")  # invited | joined
+    invited_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    # 이 번호 이하의 메시지는 읽은 것으로 봅니다("N명 읽음", 안 읽은 배지 계산용)
+    last_read_message_id: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    joined_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    room: Mapped[ChatRoom] = relationship(lazy="joined")
+    user: Mapped[User] = relationship(foreign_keys=[user_id], lazy="joined")
+    invited_by: Mapped[User | None] = relationship(foreign_keys=[invited_by_id])
+
+    __table_args__ = (Index("uq_chat_member", "room_id", "user_id", unique=True),)
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    room_id: Mapped[int] = mapped_column(ForeignKey("chat_rooms.id", ondelete="CASCADE"), index=True)
+    # 탈퇴한 사용자의 메시지는 남기고 작성자만 비웁니다.
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True)
+    kind: Mapped[str] = mapped_column(String(10), default="text")  # text | file | system
+    content: Mapped[str | None] = mapped_column(Text)
+    file_name: Mapped[str | None] = mapped_column(String(255))   # 원래 파일명(표시용)
+    file_path: Mapped[str | None] = mapped_column(String(255))   # 저장 파일명(업로드 폴더 기준 상대경로)
+    file_size: Mapped[int | None] = mapped_column()
+    file_mime: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    user: Mapped[User | None] = relationship(lazy="joined")

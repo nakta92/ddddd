@@ -13,7 +13,7 @@ NOTIFICATION_ICONS = {
     "friend_request": "🤝",
     "friend_accept": "🤝",
     "friend_reject": "🙅",
-    "chat_invite": "💌",
+    "chat_invite": "💌",  # 초대 / 초대 수락·거절
     "mention": "📣",
 }
 

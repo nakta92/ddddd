@@ -4,6 +4,7 @@ SSE처럼 응답이 끝나지 않는 기능이나 브라우저 동작은 TestCli
 사용법: python -m tests.live_server <port>
   1) GET /__fake_kakao/as/{kakao_id}/{nickname}  -> 다음 로그인할 가짜 카카오 사용자 지정
   2) GET /auth/kakao/login                         -> 가짜 인가 페이지를 거쳐 콜백으로 로그인 완료
+  3) GET /__whoami                                 -> 현재 세션의 사용자 id
 절대 운영 환경에서 실행하지 마세요.
 """
 
@@ -11,6 +12,7 @@ import sys
 from urllib.parse import urlencode
 
 import uvicorn
+from fastapi import Request
 from fastapi.responses import RedirectResponse
 
 from app import kakao
@@ -38,6 +40,11 @@ def fake_as(kakao_id: int, nickname: str):
     return {"ok": True, **_next_identity}
 
 
+@app.get("/__whoami", include_in_schema=False)
+def whoami(request: Request):
+    return {"id": request.session.get("user_id")}
+
+
 @app.get("/__fake_kakao/authorize", include_in_schema=False)
 def fake_authorize(state: str):
     code = f"fake-{_next_identity['id']}"
@@ -52,4 +59,5 @@ kakao.fetch_user = _fake_fetch_user
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
-    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+    # SSE 연결이 열려 있어도 종료가 막히지 않도록 정상 종료 대기 시간을 제한
+    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2)
