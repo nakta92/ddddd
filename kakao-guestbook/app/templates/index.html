@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="card write-box" id="write">
+  {% if user %}
+    <form method="post" action="/posts" data-ajax data-reset id="post-form">
+      <textarea id="post-content" name="content" rows="3" maxlength="2000" required
+                placeholder="{{ user.name }}님, 방명록을 남겨주세요. (Ctrl+Enter로 등록)"></textarea>
+      <div class="row">
+        <span class="muted small">최대 2000자</span>
+        <button class="btn primary">등록</button>
+      </div>
+    </form>
+  {% else %}
+    <div class="row">
+      <p class="muted">방명록을 남기려면 로그인해 주세요. 글은 누구나 볼 수 있어요.</p>
+      <a class="btn kakao" href="/login">카카오 로그인</a>
+    </div>
+  {% endif %}
+</section>
+
+<div class="list-head">
+  <h2>방명록 <span class="muted small">총 <span id="post-total">{{ total }}</span>개</span></h2>
+  <button type="button" class="btn ghost sm" id="toggle-all-comments" hidden>댓글 모두 접기</button>
+</div>
+
+<div id="post-list" data-page="{{ page }}">
+  {% for node in nodes %}
+    {% include "_post.html" %}
+  {% else %}
+    <p class="empty" id="empty-msg">아직 작성된 글이 없어요. 첫 글을 남겨보세요!</p>
+  {% endfor %}
+</div>
+
+{% if pages > 1 %}
+<nav class="pagination" aria-label="페이지">
+  {% if page > 1 %}<a href="/?page={{ page - 1 }}">‹ 이전</a>{% endif %}
+  {% for n in range([1, page - 2]|max, [pages, page + 2]|min + 1) %}
+    {% if n == page %}<span class="current" aria-current="page">{{ n }}</span>
+    {% else %}<a href="/?page={{ n }}">{{ n }}</a>{% endif %}
+  {% endfor %}
+  {% if page < pages %}<a href="/?page={{ page + 1 }}">다음 ›</a>{% endif %}
+</nav>
+{% endif %}
+
+<a href="{{ '#write' if user else '/login' }}" class="fab" id="fab-write" aria-label="글쓰기">✏️<span>글쓰기</span></a>
+{% endblock %}

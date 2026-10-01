@@ -1,0 +1,30 @@
+{% from "_macros.html" import avatar %}
+{% if m.kind == "system" %}
+  <li class="msg system" id="msg-{{ m.id }}" data-id="{{ m.id }}" data-system="1">
+    <span class="sys">{{ m.content }}</span>
+  </li>
+{% else %}
+  <li class="msg{% if me_id and m.user_id == me_id %} mine{% endif %}" id="msg-{{ m.id }}" data-id="{{ m.id }}" data-user="{{ m.user_id or '' }}">
+    {{ avatar(m.user, "sm") }}
+    <div class="msg-main">
+      <div class="msg-author">{{ m.user.name if m.user else "(알 수 없음)" }}</div>
+      <div class="msg-row">
+        <div class="bubble">
+          {% if m.kind == "file" %}
+            {% if is_inline_image(m) %}
+              <a href="/chat/files/{{ m.id }}?inline=1" target="_blank" rel="noopener">
+                <img class="chat-img" src="/chat/files/{{ m.id }}?inline=1" alt="{{ m.file_name }}" loading="lazy">
+              </a>
+            {% endif %}
+            <a class="file" href="/chat/files/{{ m.id }}" download>📎 {{ m.file_name }} <span class="muted small">({{ m.file_size|filesize }})</span></a>
+          {% endif %}
+          {% if m.content %}<div class="text">{{ render_content(m.content, mention_names) }}</div>{% endif %}
+        </div>
+        <div class="msg-info">
+          <span class="reads">{% if reads.get(m.id) %}{{ reads[m.id] }}명 읽음{% endif %}</span>
+          <time datetime="{{ m.created_at.isoformat() }}Z">{{ m.created_at|kst("%H:%M") }}</time>
+        </div>
+      </div>
+    </div>
+  </li>
+{% endif %}

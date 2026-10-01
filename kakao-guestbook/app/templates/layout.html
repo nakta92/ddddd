@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ settings.app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}">
+</head>
+<body>
+  {% from "_macros.html" import avatar with context %}
+  {% set path = request.url.path %}
+  {% macro navlink(href, icon, label, count=0, badge_key="") -%}
+    {%- set active = path == href or (href != "/" and path.startswith(href + "/")) -%}
+    <a class="side-link{% if active %} active{% endif %}" href="{{ href }}" {% if active %}aria-current="page"{% endif %}>
+      <span class="side-icon" aria-hidden="true">{{ icon }}</span>
+      <span class="side-label">{{ label }}</span>
+      <span class="badge inline" {% if badge_key %}data-badge="{{ badge_key }}"{% endif %} {% if not count %}hidden{% endif %}>{{ count if count < 100 else "99+" }}</span>
+    </a>
+  {%- endmacro %}
+
+  {# 모바일 드로어 토글: JS 없이도 동작하도록 체크박스 + label 사용 #}
+  <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true" tabindex="-1">
+
+  <header class="topbar">
+    <label for="nav-toggle" class="hamburger" role="button" tabindex="0" aria-label="메뉴 열기" aria-controls="sidebar">
+      <span></span><span></span><span></span>
+    </label>
+    <a class="logo" href="/">📖 <span>{{ settings.app_name }}</span></a>
+    <span class="spacer"></span>
+    {% if user %}
+      <a class="bell" href="/notifications" title="알림" aria-label="알림 {{ unread_notifications }}개">
+        🔔<span class="badge" id="notif-badge" data-badge="notifications" {% if not unread_notifications %}hidden{% endif %}>{{ unread_notifications if unread_notifications < 100 else "99+" }}</span>
+      </a>
+    {% else %}
+      <a class="btn kakao sm" href="/login">로그인</a>
+    {% endif %}
+  </header>
+
+  <aside class="sidebar" id="sidebar" aria-label="메뉴">
+    {% if user %}
+      <a class="side-user" href="/me" title="내 정보">
+        {{ avatar(user) }}
+        <span class="side-user-text">
+          <strong>{{ user.name }}</strong>
+          <span class="muted small">{% if user.is_admin %}관리자 · {% endif %}{{ user.login_type }} 로그인</span>
+        </span>
+      </a>
+    {% else %}
+      <div class="side-user anon">
+        <p class="muted small">로그인하면 글쓰기·친구·채팅을 이용할 수 있어요.</p>
+        <a class="btn kakao block" href="/login">카카오 로그인</a>
+      </div>
+    {% endif %}
+
+    <nav class="side-nav">
+      {{ navlink("/", "🏠", "방명록") }}
+      {% if user %}
+        {{ navlink("/chat", "💬", "채팅", chat_badge, "chat") }}
+        {{ navlink("/friends", "🤝", "친구", friend_requests, "friends") }}
+        {{ navlink("/notifications", "🔔", "알림", unread_notifications, "notifications") }}
+        {{ navlink("/me", "👤", "내 정보") }}
+        {% if user.is_admin %}{{ navlink("/admin", "🛠️", "관리자") }}{% endif %}
+      {% endif %}
+    </nav>
+
+    {% if user %}
+      <form method="post" action="/auth/logout" class="side-logout">
+        <button class="btn ghost block">로그아웃</button>
+      </form>
+    {% endif %}
+  </aside>
+  <label for="nav-toggle" class="backdrop" aria-hidden="true"></label>
+
+  <main class="container {% block container_class %}{% endblock %}">
+    {% for f in flashes %}
+      <div class="flash {{ f.category }}" role="alert">{{ f.message }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js?v={{ ASSET_VERSION }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

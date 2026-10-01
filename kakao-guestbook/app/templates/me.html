@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block title %}내 정보 · {{ settings.app_name }}{% endblock %}
+{% block content %}
+{% from "_macros.html" import avatar with context %}
+<section class="card profile-card">
+  <div class="profile-head">
+    {{ avatar(user) }}
+    <div>
+      <h1>{{ user.name }}</h1>
+      <p class="muted small">
+        {{ user.login_type }} 로그인{% if user.kakao_id %} · 카카오 닉네임 {{ user.nickname }}{% endif %}
+        · 가입일 {{ user.created_at|kst("%Y-%m-%d") }}
+        {% if user.is_admin %}<span class="chip admin">관리자</span>{% endif %}
+      </p>
+      <p class="muted small">작성한 글 {{ stats.posts }}개 · 댓글 {{ stats.comments }}개</p>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>내 정보 변경</h2>
+  <form method="post" action="/me" class="form-grid">
+    <label for="display_name">표시 이름</label>
+    <div>
+      <input type="text" id="display_name" name="display_name" maxlength="30"
+             value="{{ user.display_name or '' }}" placeholder="{{ user.nickname }}">
+      <p class="muted small">비워두면 카카오 닉네임({{ user.nickname }})이 표시됩니다. 최대 30자, @ 사용 불가.</p>
+    </div>
+    <label for="bio">자기소개</label>
+    <div>
+      <textarea id="bio" name="bio" rows="4" maxlength="300" placeholder="나를 소개해 주세요">{{ user.bio or '' }}</textarea>
+      <p class="muted small">최대 300자</p>
+    </div>
+    <div></div>
+    <div><button class="btn primary">저장</button></div>
+  </form>
+</section>
+{% endblock %}

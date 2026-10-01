@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+{% block title %}친구 · {{ settings.app_name }}{% endblock %}
+{% macro label_picker(selected="친구") %}
+  <span class="label-picker">
+    <select name="label" aria-label="관계">
+      {% for l in preset_labels %}<option value="{{ l }}" {% if l == selected %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      <option value="custom" {% if selected not in preset_labels %}selected{% endif %}>직접 입력</option>
+    </select>
+    <input type="text" name="custom_label" maxlength="20" placeholder="관계 직접 입력"
+           value="{{ selected if selected not in preset_labels else '' }}" class="custom-label">
+  </span>
+{% endmacro %}
+{% block content %}
+{% from "_macros.html" import avatar with context %}
+
+<section class="card">
+  <h2>사용자 검색</h2>
+  <form method="get" action="/friends" class="search-row">
+    <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 닉네임으로 검색" autofocus>
+    <button class="btn">검색</button>
+  </form>
+  {% if q %}
+    <ul class="people">
+      {% for u in results %}
+        {% set rel = relations.get(u.id) %}
+        <li class="person">
+          <a class="user-cell" href="/users/{{ u.id }}">{{ avatar(u, "sm") }} <span>{{ u.name }}</span></a>
+          <span class="muted small bio">{{ (u.bio or "")[:40] }}</span>
+          <span class="spacer"></span>
+          {% if rel %}
+            {% set target = u %}{% include "_relation.html" %}
+          {% else %}
+            <form method="post" action="/friends/request/{{ u.id }}" data-ajax class="inline-row">
+              {{ label_picker() }}
+              <button class="btn primary sm">친구 요청</button>
+            </form>
+          {% endif %}
+        </li>
+      {% else %}
+        <li class="empty">'{{ q }}'에 해당하는 사용자가 없어요.</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+
+{% if received %}
+<section class="card">
+  <h2>받은 요청 <span class="badge inline">{{ received|length }}</span></h2>
+  <ul class="people">
+    {% for f in received %}
+      <li class="person" id="fr-{{ f.id }}">
+        <a class="user-cell" href="/users/{{ f.requester.id }}">{{ avatar(f.requester, "sm") }} <span>{{ f.requester.name }}</span></a>
+        <span class="muted small">상대가 정한 관계: {{ f.requester_label }} · {{ f.created_at|kst }}</span>
+        <span class="spacer"></span>
+        <form method="post" action="/friends/{{ f.id }}/accept" data-ajax class="inline-row">
+          {{ label_picker(f.requester_label if f.requester_label in preset_labels else "친구") }}
+          <button class="btn primary sm">수락</button>
+        </form>
+        <form method="post" action="/friends/{{ f.id }}/reject" data-ajax data-confirm="{{ f.requester.name }}님의 요청을 거절할까요?" class="inline">
+          <button class="btn sm">거절</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if sent %}
+<section class="card">
+  <h2>보낸 요청</h2>
+  <ul class="people">
+    {% for f in sent %}
+      <li class="person" id="fr-{{ f.id }}">
+        <a class="user-cell" href="/users/{{ f.addressee.id }}">{{ avatar(f.addressee, "sm") }} <span>{{ f.addressee.name }}</span></a>
+        <span class="chip">{{ f.requester_label }}</span>
+        <span class="muted small">수락 대기 중</span>
+        <span class="spacer"></span>
+        <form method="post" action="/friends/{{ f.id }}/cancel" data-ajax class="inline">
+          <button class="btn sm">요청 취소</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>사이 맺은 친구 <span class="muted small">{{ friends|length }}명</span></h2>
+  <ul class="people">
+    {% for f in friends %}
+      {% set other = f.other(user.id) %}
+      {% set my_label = f.label_for(user.id) %}
+      <li class="person" id="fr-{{ f.id }}">
+        <a class="user-cell" href="/users/{{ other.id }}">{{ avatar(other, "sm") }} <span>{{ other.name }}</span></a>
+        <span class="chip rel-chip">{{ my_label }}</span>
+        <span class="spacer"></span>
+        <details class="inline-form">
+          <summary class="link">라벨 수정</summary>
+          <form method="post" action="/friends/{{ f.id }}/label" data-ajax class="inline-row">
+            {{ label_picker(my_label) }}
+            <button class="btn primary sm">저장</button>
+          </form>
+        </details>
+        <form method="post" action="/friends/{{ f.id }}/remove" data-ajax data-confirm="{{ other.name }}님과의 사이를 끊을까요?" class="inline">
+          <button class="link danger">끊기</button>
+        </form>
+      </li>
+    {% else %}
+      <li class="empty">아직 사이를 맺은 친구가 없어요. 위에서 검색해 친구 요청을 보내보세요.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

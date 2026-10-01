@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block title %}알림 · {{ settings.app_name }}{% endblock %}
+{% block content %}
+{% from "_macros.html" import avatar with context %}
+<div class="list-head">
+  <h2>알림 <span class="muted small">안 읽음 {{ unread_notifications }}개 · 전체 {{ total }}개</span></h2>
+  {% if unread_notifications %}
+    <form method="post" action="/notifications/read-all" data-ajax class="inline">
+      <button class="btn ghost sm">모두 읽음</button>
+    </form>
+  {% endif %}
+</div>
+
+<ul class="notif-list">
+  {% for n in items %}
+    <li>
+      <a class="notif {{ 'read' if n.is_read else 'unread' }}" href="/notifications/{{ n.id }}/go" id="notif-{{ n.id }}">
+        {% if n.actor %}{{ avatar(n.actor, "sm") }}{% else %}<span class="avatar sm placeholder">{{ icons.get(n.type, "🔔") }}</span>{% endif %}
+        <span class="notif-body">
+          <span class="notif-msg">{{ icons.get(n.type, "🔔") }} {{ n.message }}</span>
+          <time class="muted small" datetime="{{ n.created_at.isoformat() }}Z">{{ n.created_at|kst }}</time>
+        </span>
+        {% if not n.is_read %}<span class="dot" aria-label="안 읽음"></span>{% endif %}
+      </a>
+    </li>
+  {% else %}
+    <li class="empty">받은 알림이 없어요.</li>
+  {% endfor %}
+</ul>
+
+{% if pages > 1 %}
+<nav class="pagination" aria-label="페이지">
+  {% for n in range(1, pages + 1) %}
+    {% if n == page %}<span class="current">{{ n }}</span>{% else %}<a href="/notifications?page={{ n }}">{{ n }}</a>{% endif %}
+  {% endfor %}
+</nav>
+{% endif %}
+{% endblock %}

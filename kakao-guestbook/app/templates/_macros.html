@@ -1,0 +1,76 @@
+{# 공통 매크로. 사용하는 쪽에서 `import ... with context`로 가져와 user 등 컨텍스트를 공유합니다. #}
+
+{% macro avatar(u, size="") -%}
+  {%- if u and u.profile_image -%}
+    <img class="avatar {{ size }}" src="{{ u.profile_image }}" alt="" referrerpolicy="no-referrer" loading="lazy">
+  {%- else -%}
+    <span class="avatar placeholder {{ size }}" aria-hidden="true">{{ (u.name if u else "?")[:1] }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro relation_badge(target) %}{% include "_relation.html" %}{% endmacro %}
+
+{% macro reaction_bar(reactions, action) %}
+  <div class="reactions">
+    {% for r in reactions %}
+      <form method="post" action="{{ action }}" data-ajax class="reaction-form">
+        <input type="hidden" name="kind" value="{{ r.kind }}">
+        <button type="submit" class="reaction{% if r.mine %} mine{% endif %}"
+                aria-pressed="{{ 'true' if r.mine else 'false' }}"
+                aria-label="{{ r.label }} {{ r.count }}개"
+                data-tip="{{ r.label }}{% if r.names %}: {{ r.names }}{% endif %}">
+          <span class="emoji">{{ r.emoji }}</span><span class="n">{{ r.count }}</span>
+        </button>
+      </form>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro comment_item(cn, p, is_reply=False) %}
+  {% set c = cn.c %}
+  <li class="comment{% if is_reply %} reply{% endif %}" id="comment-{{ c.id }}">
+    {{ avatar(c.author, "sm") }}
+    <div class="comment-body">
+      <div class="meta">
+        <a class="author" href="/users/{{ c.author.id }}">{{ c.author.name }}</a>
+        <time datetime="{{ c.created_at.isoformat() }}Z">{{ c.created_at|kst }}</time>
+        {% if c.updated_at %}<span class="edited">(수정됨)</span>{% endif %}
+      </div>
+      <div class="content">{{ c.content }}</div>
+      <div class="foot">
+        {{ reaction_bar(cn.reactions, "/comments/%d/react" % c.id) }}
+        <span class="spacer"></span>
+        {% if user and not is_reply %}
+          <details class="inline-form" data-key="reply-form-{{ c.id }}">
+            <summary class="link">답글 달기</summary>
+            <form method="post" action="/posts/{{ p.id }}/comments" data-ajax data-reset class="stack-form">
+              <input type="hidden" name="parent_id" value="{{ c.id }}">
+              <textarea name="content" rows="2" maxlength="1000" required placeholder="답글을 입력하세요" data-key="reply-{{ c.id }}"></textarea>
+              <button class="btn primary sm">답글 등록</button>
+            </form>
+          </details>
+        {% endif %}
+        {% if user and user.id == c.user_id %}
+          <details class="inline-form" data-key="edit-comment-{{ c.id }}">
+            <summary class="link">수정</summary>
+            <form method="post" action="/comments/{{ c.id }}/edit" data-ajax class="stack-form">
+              <textarea name="content" rows="2" maxlength="1000" required>{{ c.content }}</textarea>
+              <button class="btn primary sm">저장</button>
+            </form>
+          </details>
+          <form method="post" action="/comments/{{ c.id }}/delete" data-ajax data-confirm="이 댓글을 삭제할까요?{% if not is_reply and cn.replies %} 답글도 함께 삭제됩니다.{% endif %}" class="inline">
+            <button class="link danger">삭제</button>
+          </form>
+        {% endif %}
+      </div>
+      {% if not is_reply and cn.replies %}
+        <details class="replies" data-key="replies-{{ c.id }}">
+          <summary class="link">↳ 답글 {{ cn.replies|length }}개</summary>
+          <ul class="comment-list">
+            {% for rn in cn.replies %}{{ comment_item(rn, p, True) }}{% endfor %}
+          </ul>
+        </details>
+      {% endif %}
+    </div>
+  </li>
+{% endmacro %}

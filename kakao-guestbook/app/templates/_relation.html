@@ -1,0 +1,19 @@
+{# 대상 사용자(target)와 나(user)의 관계 표시. .rel-user-{id} 요소는 친구 요청 후 AJAX로 통째로 교체됩니다. #}
+{% if user and target and target.id != user.id %}
+  {% set rel = relations.get(target.id) if relations is defined and relations else none %}
+  <span class="rel rel-user-{{ target.id }}">
+    {% if rel and rel.status == "friend" %}
+      <a class="chip rel-chip" href="/friends?highlight=fr-{{ rel.fid }}" title="나와의 관계">{{ rel.label }}</a>
+    {% elif rel and rel.status == "sent" %}
+      <span class="chip">요청 보냄</span>
+    {% elif rel and rel.status == "received" %}
+      <a class="chip warn" href="/friends?highlight=fr-{{ rel.fid }}">요청 받음 · 확인</a>
+    {% else %}
+      <form method="post" action="/friends/request/{{ target.id }}" data-ajax class="inline">
+        <input type="hidden" name="label" value="친구">
+        <input type="hidden" name="inline" value="1">
+        <button class="link add-friend">+친구 추가</button>
+      </form>
+    {% endif %}
+  </span>
+{% endif %}

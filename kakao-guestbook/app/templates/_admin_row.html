@@ -1,0 +1,31 @@
+{% from "_macros.html" import avatar with context %}
+<tr id="user-row-{{ u.id }}">
+  <td data-label="ID">{{ u.id }}</td>
+  <td data-label="회원">
+    <a class="user-cell" href="/users/{{ u.id }}">{{ avatar(u, "sm") }} <span>{{ u.name }}</span></a>
+    {% if u.display_name and u.kakao_id %}<div class="muted small">카카오: {{ u.nickname }}</div>{% endif %}
+  </td>
+  <td data-label="로그인">{{ u.login_type }}<div class="muted small">{{ u.kakao_id or u.username }}</div></td>
+  <td data-label="가입일">{{ u.created_at|kst("%Y-%m-%d") }}</td>
+  <td data-label="최근 로그인">{{ u.last_login_at|kst or "-" }}</td>
+  <td data-label="글">{{ post_counts.get(u.id, 0) }}</td>
+  <td data-label="권한">{% if u.is_admin %}<span class="chip admin">관리자</span>{% else %}<span class="muted">일반</span>{% endif %}</td>
+  <td data-label="관리" class="actions">
+    {% if u.id == user.id %}
+      <span class="muted small">본인</span>
+    {% else %}
+      {% if u.is_admin %}
+        <form method="post" action="/admin/users/{{ u.id }}/revoke" data-ajax data-confirm="{{ u.name }}님의 관리자 권한을 해제할까요?" class="inline">
+          <button class="btn sm">권한 해제</button>
+        </form>
+      {% else %}
+        <form method="post" action="/admin/users/{{ u.id }}/grant" data-ajax data-confirm="{{ u.name }}님에게 관리자 권한을 부여할까요?" class="inline">
+          <button class="btn sm">관리자 지정</button>
+        </form>
+      {% endif %}
+      <form method="post" action="/admin/users/{{ u.id }}/delete" data-ajax data-confirm="{{ u.name }}님을 삭제할까요? 작성한 글·댓글도 모두 삭제됩니다." class="inline">
+        <button class="btn danger sm">삭제</button>
+      </form>
+    {% endif %}
+  </td>
+</tr>

@@ -1,0 +1,20 @@
+services:
+  web:
+    build: .
+    image: kakao-guestbook:latest
+    container_name: kakao-guestbook
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    # 카카오 키·SECRET_KEY 등은 .env에서 읽습니다 (cp .env.example .env)
+    env_file:
+      - .env
+    environment:
+      # .env에 로컬 경로가 있어도 컨테이너에서는 /data 볼륨을 쓰도록 고정
+      DATABASE_URL: sqlite:////data/guestbook.db
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - guestbook-data:/data
+
+volumes:
+  guestbook-data:

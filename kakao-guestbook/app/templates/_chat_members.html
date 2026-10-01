@@ -1,0 +1,19 @@
+{% from "_macros.html" import avatar with context %}
+<ul class="member-list" id="member-list">
+  {% for m in members %}
+    <li>
+      <a class="user-cell" href="/users/{{ m.user.id }}">{{ avatar(m.user, "sm") }} <span>{{ m.user.name }}</span></a>
+      {% if m.user_id == user.id %}
+        <span class="chip">나</span>
+      {% else %}
+        {% set target = m.user %}{% include "_relation.html" %}
+      {% endif %}
+    </li>
+  {% endfor %}
+  {% for m in invited %}
+    <li class="muted">
+      <span class="user-cell">{{ avatar(m.user, "sm") }} <span>{{ m.user.name }}</span></span>
+      <span class="chip">초대 중</span>
+    </li>
+  {% endfor %}
+</ul>
